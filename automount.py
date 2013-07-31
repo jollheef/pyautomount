@@ -98,7 +98,8 @@ class UdevObserver(Thread):
 
     def wait(self):
         try:
-            while True: pass
+            while True:
+                time.sleep(600)
         except KeyboardInterrupt:
             exit(0)
 
