@@ -10,11 +10,22 @@ from automount import *
 from gi.repository import Gtk, GObject, Gdk
 from pprint import pprint
 from threading import Thread
+import argparse
 
 def MountedVolumes():
     _, s = getstatusoutput("pmount | grep '^/dev/' " \
                            + "| awk '{print $1}'")
     return list(filter(lambda d: d != '', s.split('\n')))
+
+def MessageBox(message, parent = None):
+    mb = Gtk.MessageDialog(
+        parent, 0, Gtk.MessageType.ERROR,
+        Gtk.ButtonsType.OK,
+        message)
+    mb.set_position(Gtk.WindowPosition.CENTER)
+    mb.run()
+    mb.destroy()
+    
 
 class MainWindow(Gtk.Window):
     def __init__(self):
@@ -54,25 +65,34 @@ class MainWindow(Gtk.Window):
                               getstatusoutput("lsof " + Volume)[1]
                 ErrorMessages.append(message)
         for message in ErrorMessages:
-            mb = Gtk.MessageDialog(
-                self, 0, Gtk.MessageType.ERROR,
-                Gtk.ButtonsType.OK,
-                message)
-            mb.run()
-            mb.destroy()
+            MessageBox(message, self)
         if len(ErrorMessages) == 0:
             exit(0)
     
-if __name__ == '__main__':
+if __name__ == '__main__':  
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--all', action='store_const',
+                        const=True, default=False,
+                        help='Umount all devices.')
+    args = parser.parse_args()
     GObject.threads_init()
     if len(MountedVolumes()) == 0:
-        mb = Gtk.MessageDialog(
-            False, 0, Gtk.MessageType.ERROR,
-            Gtk.ButtonsType.OK,
-            "Нет смонтированных устройств")
-        mb.set_position(Gtk.WindowPosition.CENTER)
-        mb.run()
-        mb.destroy()
+        MessageBox("Нет смонтированных устройств")
+        exit(0)
+    if args.all:
+        ErrorMessages = []
+        for Volume in MountedVolumes():
+            rv = UsbUmount(Volume)
+            if rv[0] != 0:
+                message = rv[1]
+                if rv[0] == 5:
+                    message = message + "\n" + \
+                              getstatusoutput("lsof " + Volume)[1]
+                ErrorMessages.append(message)
+        for message in ErrorMessages:
+            MessageBox(message)
+        if len(ErrorMessages) == 0:
+            MessageBox("Все устройства отмонтированы успешно")
         exit(0)
     win = MainWindow()
     win.connect("delete-event", Gtk.main_quit)
