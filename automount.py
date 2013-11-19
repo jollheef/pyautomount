@@ -123,4 +123,5 @@ if __name__ == '__main__':
             while True:
                 time.sleep(600)
         except ObserverDeadsException:
+            Log("Observer dead. Restarting observer.")
             pass
