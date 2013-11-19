@@ -25,10 +25,10 @@ def getstatusoutput(cmd, _shell=True):
 
 def InBlackListp(device):
     with open(dirname(abspath(__file__)) + "/blacklist", 'r') as f:
-        for id_serial in f.readlines():
-            if device['ID_SERIAL'] == id_serial.rstrip():
-                Log("device with ID_SERIAL == "
-                    + device['ID_SERIAL']
+        for devname in f.readlines():
+            if device['DEVNAME'] == devname.rstrip():
+                Log("device with DEVNAME == "
+                    + device['DEVNAME']
                     + " is not mount (blacklist)")
                 return True
             else:
@@ -36,8 +36,7 @@ def InBlackListp(device):
 
 def DeviceHandler(action, device):
     Log("Action: " + str(action) + ", " \
-        + "DEVNAME: " + str(device['DEVNAME'])
-        + ", ID_SERIAL: " + str(device['ID_SERIAL']))
+        + "DEVNAME: " + str(device['DEVNAME']))
     if action == "add":
         if InBlackListp(device):
             return None
@@ -122,7 +121,6 @@ class UdevObserver(Thread):
                     raise ObserverDeadsException
         except KeyboardInterrupt:
             exit(0)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
