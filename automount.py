@@ -78,6 +78,9 @@ def Log(message):
     print(str(time.strftime("[%d %b %Y %H:%M:%S] (")) + \
           current_thread().name + ") " + str(message))
 
+class ObserverDeadsException(Exception):
+    pass
+
 class UdevObserver(Thread):
     def __init__(self, DeviceHandler):
         super(UdevObserver, self).__init__()
@@ -99,7 +102,9 @@ class UdevObserver(Thread):
     def wait(self):
         try:
             while True:
-                time.sleep(600)
+                time.sleep(1)
+                if not self.observer.isAlive():
+                    raise ObserverDeadsException
         except KeyboardInterrupt:
             exit(0)
 
@@ -110,7 +115,12 @@ if __name__ == '__main__':
                         const="sync", default="async",
                         help='Mount without write caching.')
     args = parser.parse_args()
-    Observer = UdevObserver(DeviceHandler)
-    Observer.run()
-    Observer.wait()
-    exit(0)
+    while True:
+        try:
+            Observer = UdevObserver(DeviceHandler)
+            Observer.run()
+            Observer.wait()
+            while True:
+                time.sleep(600)
+        except ObserverDeadsException:
+            pass
