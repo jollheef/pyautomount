@@ -36,7 +36,8 @@ def InBlackListp(device):
 
 def DeviceHandler(action, device):
     Log("Action: " + str(action) + ", " \
-        + "DEVNAME: " + str(device['DEVNAME']))
+        + "DEVNAME: " + str(device['DEVNAME'])
+        + "ID_SERIAL: " + str(device['ID_SERIAL']))
     if action == "add":
         if InBlackListp(device):
             return None
@@ -121,8 +122,6 @@ class UdevObserver(Thread):
                     raise ObserverDeadsException
         except KeyboardInterrupt:
             exit(0)
-
-
 
 
 if __name__ == '__main__':
