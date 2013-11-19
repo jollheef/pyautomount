@@ -7,6 +7,7 @@
 #
 
 import os, time, pyudev, re, subprocess, argparse
+from os.path import abspath, dirname
 from threading import Thread, current_thread
 
 def getstatusoutput(cmd, _shell=True): 
@@ -22,10 +23,23 @@ def getstatusoutput(cmd, _shell=True):
         sts = 0
     return sts, output
 
+def InBlackListp(device):
+    with open(dirname(abspath(__file__)) + "/blacklist", 'r') as f:
+        for id_serial in f.readlines():
+            if device['ID_SERIAL'] == id_serial.rstrip():
+                Log("device with ID_SERIAL == "
+                    + device['ID_SERIAL']
+                    + " is not mount (blacklist)")
+                return True
+            else:
+                return False
+
 def DeviceHandler(action, device):
     Log("Action: " + str(action) + ", " \
         + "DEVNAME: " + str(device['DEVNAME']))
     if action == "add":
+        if InBlackListp(device):
+            return None
         if sum(1 for _ in device.children) != 0:
             Log(str(device.device_node) + \
                 " is not mount (partition table)")
@@ -36,7 +50,7 @@ def DeviceHandler(action, device):
                                  + str(device.device_node) + " (" \
                                  + str(device['ID_VENDOR']) + " " \
                                  + str(device['ID_MODEL']) + ")")
-            if ret[0] != 0:
+            if retsend[0] != 0:
                 Log("SendNotify error: " + retsend[1])
             return None
         SendNotify(str(device.device_node) + " (" \
@@ -107,6 +121,9 @@ class UdevObserver(Thread):
                     raise ObserverDeadsException
         except KeyboardInterrupt:
             exit(0)
+
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
