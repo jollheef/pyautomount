@@ -23,16 +23,16 @@ def getstatusoutput(cmd, _shell=True):
         sts = 0
     return sts, output
 
-def InBlackListp(device):
+def InBlackListp(device) -> bool:
+    Log("Check blacklist for ID_SERIAL " + device['ID_SERIAL'])
     with open(dirname(abspath(__file__)) + "/blacklist", 'r') as f:
         for devname in f.readlines():
-            if device['DEVNAME'] == devname.rstrip():
-                Log("device with DEVNAME == "
-                    + device['DEVNAME']
+            if device['ID_SERIAL'] == devname.rstrip():
+                Log("device with ID_SERIAL == "
+                    + device['ID_SERIAL']
                     + " is not mount (blacklist)")
                 return True
-            else:
-                return False
+    return False
 
 def DeviceHandler(action, device):
     Log("Action: " + str(action) + ", " \
@@ -45,17 +45,24 @@ def DeviceHandler(action, device):
                 " is not mount (partition table)")
             return None
         retusb = UsbMount(device)
+        id_vendor = ""
+        id_model = ""
+        try:
+            id_vendor = str(device['ID_VENDOR'])
+            id_model = str(device['ID_MODEL'])
+        except:
+            pass
         if retusb[0] != 0:
             retsend = SendNotify("Ошибка при монтировании раздела " \
                                  + str(device.device_node) + " (" \
-                                 + str(device['ID_VENDOR']) + " " \
-                                 + str(device['ID_MODEL']) + ")")
+                                 + id_vendor + " " \
+                                 + id_model + ")")
             if retsend[0] != 0:
                 Log("SendNotify error: " + retsend[1])
             return None
         SendNotify(str(device.device_node) + " (" \
-                   + str(device['ID_VENDOR']) + " " \
-                   + str(device['ID_MODEL']) + ") " \
+                   + id_vendor + " " \
+                   + id_model + ") " \
                    + "смонтирован в " + str(retusb[1]))
     if action == "remove" and UsbMountedp(device):
         Log("Unsafely umount")
