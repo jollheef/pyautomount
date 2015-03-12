@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.2
+#!/usr/bin/env python3
 ## This file is part of the pyautomount application, released under
 ## GNU General Public License, Version 3.0
 ## See file COPYING for details.

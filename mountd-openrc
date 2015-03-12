@@ -1,0 +1,31 @@
+#!/sbin/runscript
+# Copyright 2015 Mikhail Klementyev jollheef<AT>riseup.net
+# Distributed under the terms of the GNU General Public License v3
+# $Header: $
+
+BIN_DESC="Mount daemon"
+
+DAEMON_BIN="/home/mikhail/dev/pyautomount/automount.py"
+DAEMON_ARGS=""
+DAEMON_PIDFILE=/var/run/${BIN_NAME}.pid
+USER="mikhail"
+
+start()
+{
+    ebegin "Starting ${BIN_DESC}"
+
+    start-stop-daemon --start --quiet --background \
+		      --make-pidfile --pidfile ${DAEMON_PIDFILE} \
+		      --user ${USER} --exec ${DAEMON_BIN}
+    
+    eend $?
+}
+
+stop()
+{
+    ebegin "Stopping ${BIN_DESC}"
+
+    start-stop-daemon --stop --pidfile ${DAEMON_PIDFILE}
+
+    eend $?
+}
